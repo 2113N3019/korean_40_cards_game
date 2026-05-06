@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>韓文四十音卡片小遊戲</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --card: #fffdf8;
+      --text: #2b2723;
+      --muted: #7a6f66;
+      --primary: #6b7f5f;
+      --primary-dark: #526548;
+      --green: #4f9d69;
+      --red: #d85c5c;
+      --green-soft: #eef8f0;
+      --green-line: #9bc9a6;
+      --red-soft: #fff0ef;
+      --red-line: #eba19c;
+      --blue: #6f8faf;
+      --gold: #c18b45;
+      --purple: #8b73b7;
+      --pause: #d89a3d;
+      --danger: #c85050;
+      --line: #e6ded3;
+      --shadow: 0 12px 30px rgba(50, 38, 22, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background: radial-gradient(circle at top, #fffaf0 0%, var(--bg) 45%, #ece4d8 100%);
+      color: var(--text);
+    }
+
+    .app {
+      width: min(1180px, 94vw);
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(247, 244, 239, 0.9);
+      border: 1px solid rgba(230, 222, 211, 0.85);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(72, 56, 34, 0.08);
+      padding: 16px;
+      margin-bottom: 22px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(68, 52, 34, 0.06);
+      white-space: nowrap;
+    }
+
+    .timer-pill {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .timer-pill:hover { border-color: var(--primary); }
+
+    .countdown-setting {
+      display: none;
+      margin-top: 12px;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .countdown-setting.show { display: flex; }
+
+    .countdown-setting input {
+      width: 74px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 8px;
+      background: #fff;
+      font: inherit;
+    }
+
+    .home {
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+    }
+
+    .home-panel {
+      width: min(600px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .home-panel h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 4vw, 2.15rem);
+    }
+
+    .home-panel p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .menu-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) minmax(280px, 460px) minmax(130px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .pile {
+      min-height: 380px;
+      border: 2px dashed var(--line);
+      border-radius: 24px;
+      padding: 14px;
+      background: rgba(255,255,255,0.42);
+    }
+
+    .pile.correct-pile {
+      border-color: var(--green-line);
+      background: var(--green-soft);
+    }
+
+    .pile.wrong-pile {
+      border-color: var(--red-line);
+      background: var(--red-soft);
+    }
+
+    .pile h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .pile-count {
+      display: inline-grid;
+      place-items: center;
+      min-width: 30px;
+      height: 30px;
+      margin-left: 6px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .correct-pile .pile-count { background: var(--green); }
+    .wrong-pile .pile-count { background: var(--red); }
+
+    .mini-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .mini-card {
+      width: 46px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      font-size: 1.25rem;
+      font-weight: 900;
+      box-shadow: 0 4px 10px rgba(68, 52, 34, 0.08);
+    }
+
+    .deck-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .progress-track {
+      position: relative;
+      width: 100%;
+      padding-right: 34px;
+      margin-top: 10px;
+    }
+
+    .progress {
+      width: 100%;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      height: 16px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.25s ease;
+    }
+
+    .progress-number {
+      position: absolute;
+      right: -8px;
+      top: -10px;
+      min-width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #111;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1rem;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+      z-index: 3;
+    }
+
+    .card-shell {
+      width: min(100%, 390px);
+      min-height: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .card {
+      width: 100%;
+      height: 310px;
+      perspective: 1000px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .card-back { transform: rotateY(180deg); }
+
+    .label {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 14px;
+    }
+
+    .letter {
+      font-size: clamp(5rem, 18vw, 8rem);
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .sound {
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      line-height: 1.15;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .hint {
+      color: var(--muted);
+      margin-top: 14px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 6px 14px rgba(68, 52, 34, 0.13);
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.04); }
+    button:active { transform: translateY(0); }
+
+    .btn-consonant { background: var(--blue); }
+    .btn-vowel { background: var(--gold); }
+    .btn-mixed { background: var(--purple); }
+    .btn-secondary { background: var(--primary-dark); }
+    .btn-green { background: var(--green); }
+    .btn-red { background: var(--red); }
+    .btn-pause { background: var(--pause); }
+    .btn-end { background: var(--danger); }
+    .home-back { margin-top: 18px; background: var(--primary-dark); }
+
+    .floating-controls {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .floating-controls button { min-width: 96px; }
+
+    .empty-state {
+      display: none;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 28px 22px;
+      width: min(100%, 420px);
+    }
+
+    .empty-state.show { display: block; }
+
+    .empty-state h2 {
+      margin: 0 0 10px;
+      font-size: 1.5rem;
+    }
+
+    .empty-state p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .celebration-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      pointer-events: none;
+      background: rgba(255, 250, 240, 0.35);
+    }
+
+    .celebration-overlay.show { display: grid; }
+
+    .celebration-box {
+      position: relative;
+      width: min(430px, 88vw);
+      min-height: 250px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: rgba(255, 253, 248, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      overflow: hidden;
+    }
+
+    .celebration-text {
+      position: relative;
+      z-index: 2;
+      font-size: clamp(1.7rem, 5vw, 2.7rem);
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .party-popper {
+      position: absolute;
+      bottom: 28px;
+      font-size: 3rem;
+      transform-origin: bottom center;
+      animation: popperShake 0.7s ease-in-out infinite alternate;
+    }
+
+    .party-popper.left { left: 32px; transform: rotate(-24deg); }
+    .party-popper.right { right: 32px; transform: rotate(24deg) scaleX(-1); }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 3px;
+      opacity: 0;
+      animation: confettiBurst 1.3s ease-out infinite;
+    }
+
+    .confetti:nth-child(3) { left: 24%; top: 52%; background: #d85c5c; animation-delay: 0s; }
+    .confetti:nth-child(4) { left: 34%; top: 48%; background: #d89a3d; animation-delay: .08s; }
+    .confetti:nth-child(5) { left: 45%; top: 50%; background: #4f9d69; animation-delay: .16s; }
+    .confetti:nth-child(6) { left: 56%; top: 48%; background: #6f8faf; animation-delay: .24s; }
+    .confetti:nth-child(7) { left: 66%; top: 52%; background: #8b73b7; animation-delay: .32s; }
+    .confetti:nth-child(8) { left: 76%; top: 50%; background: #d85c5c; animation-delay: .4s; }
+
+    @keyframes popperShake {
+      from { translate: 0 0; }
+      to { translate: 0 -6px; }
+    }
+
+    @keyframes confettiBurst {
+      0% { opacity: 0; transform: translate(0, 20px) rotate(0deg) scale(.7); }
+      15% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--x, 0), -120px) rotate(340deg) scale(1); }
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 860px) {
+      .topbar { grid-template-columns: 1fr; }
+      .scoreboard { justify-content: flex-start; }
+      .layout { grid-template-columns: 1fr; }
+      .pile { min-height: auto; }
+      .deck-area { order: -1; }
+      .floating-controls { right: 14px; bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="topbar">
+        <div>
+          <h1>韓文四十音卡片小遊戲</h1>
+          <p class="subtitle" id="subtitle">請先選擇練習範圍。</p>
+        </div>
+        <div class="scoreboard hidden" id="scoreboard">
+          <div class="pill timer-pill" id="timerToggle" title="按一下切換正計時／倒計時">⏱ <span id="timerMode">正計時</span>：<span id="timer">00:00</span></div>
+        </div>
+      </div>
+      <div class="countdown-setting" id="countdownSetting">
+        倒計時分鐘：
+        <input id="countdownMinutes" type="number" min="1" max="60" value="5" />
+        <button class="btn-secondary" id="applyCountdown" type="button">套用</button>
+      </div>
+    </header>
+
+    <section class="home" id="homeArea">
+      <div class="home-panel" id="mainMenu">
+        <h2>選擇練習模式</h2>
+        <p>可以練習全部混合，也可以先分開練子音或母音。</p>
+        <div class="menu-group">
+          <button class="btn-consonant" type="button" data-menu="consonant">子音</button>
+          <button class="btn-vowel" type="button" data-menu="vowel">母音</button>
+          <button class="btn-mixed" type="button" data-start="mixed">混合</button>
+        </div>
+      </div>
+
+      <div class="home-panel hidden" id="subMenu">
+        <h2 id="subMenuTitle">選擇分類</h2>
+        <p id="subMenuText">請選擇這次要練習的範圍。</p>
+        <div class="menu-group" id="subMenuButtons"></div>
+        <button class="home-back" type="button" id="backMainMenu">返回上一層</button>
+      </div>
+    </section>
+
+    <section class="layout hidden" id="gameLayout">
+      <aside class="pile correct-pile">
+        <h2>答對卡片 <span class="pile-count" id="correctCount">0</span></h2>
+        <div class="mini-cards" id="correctPile"></div>
+      </aside>
+
+      <section class="deck-area">
+        <div class="progress-track" id="progressTrack">
+          <div class="progress" aria-label="進度條"><div class="progress-bar" id="progressBar"></div></div>
+          <div class="progress-number" id="progressNumber">0</div>
+        </div>
+
+        <div class="card-shell" id="gameArea">
+          <div class="card" id="card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="label">正面｜字母</div>
+                <div class="letter" id="letter">ㄱ</div>
+              </div>
+              <div class="card-face card-back">
+                <div class="label">背面｜發音</div>
+                <div class="sound" id="sound">g / k</div>
+                <div class="hint" id="hint">像「ㄍ、ㄎ」之間，字首偏 k，字中偏 g。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions" id="answerAction">
+            <button id="showAnswer" type="button">看答案</button>
+          </div>
+
+          <div class="actions hidden" id="judgeActions">
+            <button class="btn-green" id="markCorrect" type="button">答對</button>
+            <button class="btn-red" id="markWrong" type="button">答錯</button>
+          </div>
+        </div>
+
+        <div class="empty-state" id="finishArea">
+          <h2 id="finishTitle">完成這一輪！</h2>
+          <p id="finishText">可以再玩一次，或只練習剛剛答錯的卡片。</p>
+          <div class="actions">
+            <button id="playAgain" type="button">再玩一次</button>
+            <button class="btn-secondary" id="practiceWrong" type="button">練習錯題</button>
+            <button class="btn-secondary" id="backHome" type="button">回首頁</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="pile wrong-pile">
+        <h2>答錯卡片 <span class="pile-count" id="wrongCount">0</span></h2>
+        <div class="mini-cards" id="wrongPile"></div>
+      </aside>
+    </section>
+
+    <div class="floating-controls hidden" id="floatingControls">
+      <button class="btn-pause" type="button" id="pauseGame">暫停</button>
+      <button class="btn-end" type="button" id="endGame">結束遊戲</button>
+    </div>
+
+    <div class="celebration-overlay" id="celebrationOverlay">
+      <div class="celebration-box">
+        <div class="party-popper left">🎉</div>
+        <div class="party-popper right">🎉</div>
+        <span class="confetti" style="--x:-90px"></span>
+        <span class="confetti" style="--x:-50px"></span>
+        <span class="confetti" style="--x:-20px"></span>
+        <span class="confetti" style="--x:20px"></span>
+        <span class="confetti" style="--x:55px"></span>
+        <span class="confetti" style="--x:95px"></span>
+        <div class="celebration-text">全部答對！<br>恭喜完成 🎊</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cardGroups = {
+        basicConsonants: [
+          { letter: "ㄱ", sound: "g / k", hint: "像「ㄍ、ㄎ」之間，字首偏 k，字中偏 g。" },
+          { letter: "ㄴ", sound: "n", hint: "接近中文注音「ㄋ」。" },
+          { letter: "ㄷ", sound: "d / t", hint: "像「ㄉ、ㄊ」之間，字首偏 t，字中偏 d。" },
+          { letter: "ㄹ", sound: "r / l", hint: "介於 r 與 l；收尾時常接近 l。" },
+          { letter: "ㅁ", sound: "m", hint: "接近中文注音「ㄇ」。" },
+          { letter: "ㅂ", sound: "b / p", hint: "像「ㄅ、ㄆ」之間，字首偏 p，字中偏 b。" },
+          { letter: "ㅅ", sound: "s", hint: "接近 s；遇到 ㅣ 類母音時常接近 shi。" },
+          { letter: "ㅇ", sound: "無聲 / ng", hint: "在字首不發音；在收尾時發 ng。" },
+          { letter: "ㅈ", sound: "j / ch", hint: "像 j / ch 之間，字首偏 ch。" },
+          { letter: "ㅎ", sound: "h", hint: "接近 h。" }
+        ],
+        aspiratedConsonants: [
+          { letter: "ㅊ", sound: "ch", hint: "比 ㅈ 更明顯送氣。" },
+          { letter: "ㅋ", sound: "k", hint: "比 ㄱ 更明顯送氣。" },
+          { letter: "ㅌ", sound: "t", hint: "比 ㄷ 更明顯送氣。" },
+          { letter: "ㅍ", sound: "p", hint: "比 ㅂ 更明顯送氣。" }
+        ],
+        tenseConsonants: [
+          { letter: "ㄲ", sound: "kk", hint: "緊音，聲音短而緊。" },
+          { letter: "ㄸ", sound: "tt", hint: "緊音，聲音短而緊。" },
+          { letter: "ㅃ", sound: "pp", hint: "緊音，聲音短而緊。" },
+          { letter: "ㅆ", sound: "ss", hint: "緊音，比 ㅅ 更緊。" },
+          { letter: "ㅉ", sound: "jj", hint: "緊音，比 ㅈ 更緊。" }
+        ],
+        singleVowels: [
+          { letter: "ㅏ", sound: "a", hint: "接近「啊」。" },
+          { letter: "ㅑ", sound: "ya", hint: "接近「呀」。" },
+          { letter: "ㅓ", sound: "eo", hint: "嘴巴張開，偏「喔／ㄜ」之間。" },
+          { letter: "ㅕ", sound: "yeo", hint: "ㅓ 前面加 y 音。" },
+          { letter: "ㅗ", sound: "o", hint: "嘴唇圓，接近「喔」。" },
+          { letter: "ㅛ", sound: "yo", hint: "ㅗ 前面加 y 音。" },
+          { letter: "ㅜ", sound: "u", hint: "嘴唇圓，接近「嗚」。" },
+          { letter: "ㅠ", sound: "yu", hint: "ㅜ 前面加 y 音。" },
+          { letter: "ㅡ", sound: "eu", hint: "嘴角微拉平，韓文特有母音。" },
+          { letter: "ㅣ", sound: "i", hint: "接近「衣」。" },
+          { letter: "ㅐ", sound: "ae", hint: "接近 e / ㄟ。" },
+          { letter: "ㅒ", sound: "yae", hint: "ㅐ 前面加 y 音。" },
+          { letter: "ㅔ", sound: "e", hint: "現代韓語中常與 ㅐ 發音相近。" },
+          { letter: "ㅖ", sound: "ye", hint: "ㅔ 前面加 y 音。" }
+        ],
+        doubleVowels: [
+          { letter: "ㅘ", sound: "wa", hint: "ㅗ + ㅏ。" },
+          { letter: "ㅙ", sound: "wae", hint: "ㅗ + ㅐ。" },
+          { letter: "ㅚ", sound: "oe / we", hint: "現代口語常接近 we。" },
+          { letter: "ㅝ", sound: "wo", hint: "ㅜ + ㅓ。" },
+          { letter: "ㅞ", sound: "we", hint: "ㅜ + ㅔ。" },
+          { letter: "ㅟ", sound: "wi", hint: "ㅜ + ㅣ。" },
+          { letter: "ㅢ", sound: "ui", hint: "ㅡ + ㅣ；依位置可能讀法不同。" }
+        ]
+      };
+
+      const groupNames = {
+        mixed: "混合",
+        basicConsonants: "基本子音",
+        aspiratedConsonants: "氣音",
+        tenseConsonants: "硬音",
+        singleVowels: "單母音",
+        doubleVowels: "雙母音"
+      };
+
+      const allCards = [
+        ...cardGroups.basicConsonants,
+        ...cardGroups.aspiratedConsonants,
+        ...cardGroups.tenseConsonants,
+        ...cardGroups.singleVowels,
+        ...cardGroups.doubleVowels
+      ];
+
+      const $ = (id) => document.getElementById(id);
+      const setText = (element, value) => { if (element) element.textContent = value; };
+      const setHTML = (element, value) => { if (element) element.innerHTML = value; };
+
+      const elements = {
+        subtitle: $("subtitle"),
+        scoreboard: $("scoreboard"),
+        homeArea: $("homeArea"),
+        gameLayout: $("gameLayout"),
+        mainMenu: $("mainMenu"),
+        subMenu: $("subMenu"),
+        subMenuTitle: $("subMenuTitle"),
+        subMenuText: $("subMenuText"),
+        subMenuButtons: $("subMenuButtons"),
+        floatingControls: $("floatingControls"),
+        pauseGame: $("pauseGame"),
+        card: $("card"),
+        letter: $("letter"),
+        sound: $("sound"),
+        hint: $("hint"),
+        correctCount: $("correctCount"),
+        wrongCount: $("wrongCount"),
+        correctPile: $("correctPile"),
+        wrongPile: $("wrongPile"),
+        progressBar: $("progressBar"),
+        progressNumber: $("progressNumber"),
+        answerAction: $("answerAction"),
+        judgeActions: $("judgeActions"),
+        gameArea: $("gameArea"),
+        finishArea: $("finishArea"),
+        finishTitle: $("finishTitle"),
+        finishText: $("finishText"),
+        practiceWrong: $("practiceWrong"),
+        timer: $("timer"),
+        timerMode: $("timerMode"),
+        countdownSetting: $("countdownSetting"),
+        countdownMinutes: $("countdownMinutes"),
+        backMainMenu: $("backMainMenu"),
+        showAnswer: $("showAnswer"),
+        markCorrect: $("markCorrect"),
+        markWrong: $("markWrong"),
+        playAgain: $("playAgain"),
+        backHome: $("backHome"),
+        timerToggle: $("timerToggle"),
+        applyCountdown: $("applyCountdown"),
+        endGame: $("endGame"),
+        celebrationOverlay: $("celebrationOverlay")
+      };
+
+      let deck = [];
+      let current = 0;
+      let correct = [];
+      let wrong = [];
+      let roundWrong = [];
+      let selectedCards = allCards;
+      let selectedModeName = "混合";
+      let timerSeconds = 0;
+      let timerInterval = null;
+      let isCountdown = false;
+      let countdownTotal = 5 * 60;
+      let isPaused = false;
+
+      function shuffle(array) {
+        return [...array].sort(() => Math.random() - 0.5);
+      }
+
+      function formatTime(seconds) {
+        const safeSeconds = Math.max(0, seconds);
+        const m = String(Math.floor(safeSeconds / 60)).padStart(2, "0");
+        const s = String(safeSeconds % 60).padStart(2, "0");
+        return `${m}:${s}`;
+      }
+
+      function playTone(sequence) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          sequence.forEach(([frequency, start, duration, volume]) => {
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + start);
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+            gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+            oscillator.start(ctx.currentTime + start);
+            oscillator.stop(ctx.currentTime + start + duration + 0.02);
+          });
+        } catch (error) {
+          console.warn("瀏覽器暫時無法播放音效", error);
+        }
+      }
+
+      function playCorrectSound() {
+        playTone([[660, 0, 0.09, 0.08]]);
+      }
+
+      function playWrongSound() {
+        playTone([[240, 0, 0.12, 0.06]]);
+      }
+
+      function playSuccessSound() {
+        playTone([
+          [523.25, 0, 0.14, 0.13],
+          [659.25, 0.11, 0.14, 0.13],
+          [783.99, 0.22, 0.16, 0.15],
+          [1046.5, 0.36, 0.22, 0.16]
+        ]);
+      }
+
+      function playEncourageSound() {
+        playTone([
+          [392, 0, 0.14, 0.09],
+          [440, 0.13, 0.14, 0.09],
+          [523.25, 0.26, 0.18, 0.1]
+        ]);
+      }
+
+      function tickTimer() {
+        if (isCountdown) {
+          timerSeconds--;
+          if (timerSeconds <= 0) {
+            timerSeconds = 0;
+            setText(elements.timer, formatTime(timerSeconds));
+            clearInterval(timerInterval);
+            alert("時間到！可以繼續完成這一輪，或按再玩一次重新開始。");
+            return;
+          }
+        } else {
+          timerSeconds++;
+        }
+        setText(elements.timer, formatTime(timerSeconds));
+      }
+
+      function startTimer(reset = true) {
+        clearInterval(timerInterval);
+        if (reset) timerSeconds = isCountdown ? countdownTotal : 0;
+        setText(elements.timer, formatTime(timerSeconds));
+        timerInterval = setInterval(tickTimer, 1000);
+      }
+
+      function togglePause() {
+        if (!elements.gameLayout || elements.gameLayout.classList.contains("hidden")) return;
+        isPaused = !isPaused;
+        if (isPaused) {
+          clearInterval(timerInterval);
+          setText(elements.pauseGame, "繼續");
+        } else {
+          startTimer(false);
+          setText(elements.pauseGame, "暫停");
+        }
+      }
+
+      function renderMiniPile(container, cards) {
+        setHTML(container, cards.map(card => `<div class="mini-card" title="${card.sound}">${card.letter}</div>`).join(""));
+      }
+
+      function updateProgress() {
+        const total = deck.length || 0;
+        const answered = correct.length + wrong.length;
+        const remaining = Math.max(total - answered, 0);
+        const done = total ? (answered / total) * 100 : 0;
+        if (elements.progressBar) elements.progressBar.style.width = `${done}%`;
+        setText(elements.progressNumber, String(remaining));
+        setText(elements.correctCount, String(correct.length));
+        setText(elements.wrongCount, String(wrong.length));
+        renderMiniPile(elements.correctPile, correct);
+        renderMiniPile(elements.wrongPile, wrong);
+      }
+
+      function renderCard() {
+        if (!elements.card || !elements.answerAction || !elements.judgeActions) return;
+        elements.card.classList.remove("flipped");
+        elements.answerAction.classList.remove("hidden");
+        elements.judgeActions.classList.add("hidden");
+
+        const item = deck[current];
+        if (!item) {
+          finishRound();
+          return;
+        }
+
+        setText(elements.letter, item.letter);
+        setText(elements.sound, item.sound);
+        setText(elements.hint, item.hint);
+        updateProgress();
+      }
+
+      function finishRound() {
+        clearInterval(timerInterval);
+        elements.gameArea?.classList.add("hidden");
+        elements.finishArea?.classList.add("show");
+        if (elements.progressBar) elements.progressBar.style.width = "100%";
+        setText(elements.progressNumber, "0");
+
+        if (roundWrong.length === 0) {
+          setText(elements.finishTitle, "全部答對！");
+          setText(elements.finishText, `完成「${selectedModeName}」${deck.length} 張卡片，這一輪沒有錯題。太好了，這一輪全部記住了！`);
+          elements.celebrationOverlay?.classList.add("show");
+          playSuccessSound();
+          setTimeout(() => elements.celebrationOverlay?.classList.remove("show"), 2400);
+          if (elements.practiceWrong) {
+            elements.practiceWrong.disabled = true;
+            elements.practiceWrong.style.opacity = "0.5";
+            elements.practiceWrong.style.cursor = "not-allowed";
+          }
+        } else {
+          setText(elements.finishTitle, "完成這一輪！");
+          setText(elements.finishText, `「${selectedModeName}」這一輪答錯 ${roundWrong.length} 張。沒關係，已經完成一輪練習了；可以按「練習錯題」把不熟的地方慢慢補起來。`);
+          playEncourageSound();
+          if (elements.practiceWrong) {
+            elements.practiceWrong.disabled = false;
+            elements.practiceWrong.style.opacity = "1";
+            elements.practiceWrong.style.cursor = "pointer";
+          }
+        }
+      }
+
+      function beginRound(cards, modeName = selectedModeName) {
+        selectedCards = cards;
+        selectedModeName = modeName;
+        deck = shuffle(cards);
+        current = 0;
+        correct = [];
+        wrong = [];
+        roundWrong = [];
+        isPaused = false;
+        setText(elements.pauseGame, "暫停");
+        elements.celebrationOverlay?.classList.remove("show");
+        elements.homeArea?.classList.add("hidden");
+        elements.gameLayout?.classList.remove("hidden");
+        elements.scoreboard?.classList.remove("hidden");
+        elements.floatingControls?.classList.remove("hidden");
+        setText(elements.subtitle, `目前練習：${selectedModeName}`);
+        elements.gameArea?.classList.remove("hidden");
+        elements.finishArea?.classList.remove("show");
+        elements.card?.classList.remove("flipped");
+        if (elements.progressBar) elements.progressBar.style.width = "0%";
+        setText(elements.progressNumber, String(deck.length));
+        startTimer(true);
+        renderCard();
+      }
+
+      function judge(isCorrect) {
+        const item = deck[current];
+        if (!item) return;
+
+        if (isCorrect) {
+          correct.push(item);
+          playCorrectSound();
+        } else {
+          wrong.push(item);
+          roundWrong.push(item);
+          playWrongSound();
+        }
+
+        current++;
+        updateProgress();
+        setTimeout(renderCard, 160);
+      }
+
+      function showMainMenu() {
+        elements.mainMenu?.classList.remove("hidden");
+        elements.subMenu?.classList.add("hidden");
+        setHTML(elements.subMenuButtons, "");
+      }
+
+      function showSubMenu(type) {
+        elements.mainMenu?.classList.add("hidden");
+        elements.subMenu?.classList.remove("hidden");
+
+        const options = type === "consonant"
+          ? [
+              ["basicConsonants", "基本子音", "btn-consonant"],
+              ["aspiratedConsonants", "氣音", "btn-consonant"],
+              ["tenseConsonants", "硬音", "btn-consonant"]
+            ]
+          : [
+              ["singleVowels", "單母音", "btn-vowel"],
+              ["doubleVowels", "雙母音", "btn-vowel"]
+            ];
+
+        setText(elements.subMenuTitle, type === "consonant" ? "選擇子音分類" : "選擇母音分類");
+        setText(elements.subMenuText, type === "consonant" ? "請選擇基本子音、氣音或硬音。" : "請選擇單母音或雙母音。");
+        setHTML(elements.subMenuButtons, options.map(([key, label, className]) => `<button class="${className}" type="button" data-start="${key}">${label}</button>`).join(""));
+      }
+
+      function backToHome() {
+        clearInterval(timerInterval);
+        isPaused = false;
+        setText(elements.pauseGame, "暫停");
+        elements.gameLayout?.classList.add("hidden");
+        elements.scoreboard?.classList.add("hidden");
+        elements.floatingControls?.classList.add("hidden");
+        elements.celebrationOverlay?.classList.remove("show");
+        elements.homeArea?.classList.remove("hidden");
+        setText(elements.subtitle, "請先選擇練習範圍。");
+        elements.countdownSetting?.classList.remove("show");
+        showMainMenu();
+      }
+
+      function runSelfTests() {
+        console.assert(allCards.length === 40, `韓文四十音數量應為 40，目前為 ${allCards.length}`);
+        console.assert(elements.progressNumber !== null, "progressNumber 應存在於 DOM");
+        console.assert(elements.correctCount !== null, "correctCount 應存在於 DOM");
+        console.assert(elements.wrongCount !== null, "wrongCount 應存在於 DOM");
+        console.assert(formatTime(65) === "01:05", "formatTime(65) 應為 01:05");
+        console.assert(cardGroups.basicConsonants.length + cardGroups.aspiratedConsonants.length + cardGroups.tenseConsonants.length === 19, "子音總數應為 19");
+        console.assert(cardGroups.singleVowels.length + cardGroups.doubleVowels.length === 21, "母音總數應為 21");
+      }
+
+      document.querySelectorAll("[data-menu]").forEach(button => {
+        button.addEventListener("click", () => showSubMenu(button.dataset.menu));
+      });
+
+      elements.backMainMenu?.addEventListener("click", showMainMenu);
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-start]");
+        if (!button) return;
+        const key = button.dataset.start;
+        const cards = key === "mixed" ? allCards : cardGroups[key];
+        if (!cards) return;
+        beginRound(cards, groupNames[key]);
+      });
+
+      elements.showAnswer?.addEventListener("click", () => {
+        elements.card?.classList.add("flipped");
+        elements.answerAction?.classList.add("hidden");
+        elements.judgeActions?.classList.remove("hidden");
+      });
+
+      elements.markCorrect?.addEventListener("click", () => judge(true));
+      elements.markWrong?.addEventListener("click", () => judge(false));
+      elements.playAgain?.addEventListener("click", () => beginRound(selectedCards, selectedModeName));
+      elements.practiceWrong?.addEventListener("click", () => {
+        if (roundWrong.length > 0) beginRound(roundWrong, `${selectedModeName}錯題`);
+      });
+      elements.backHome?.addEventListener("click", backToHome);
+      elements.pauseGame?.addEventListener("click", togglePause);
+      elements.endGame?.addEventListener("click", backToHome);
+
+      elements.timerToggle?.addEventListener("click", () => {
+        isCountdown = !isCountdown;
+        setText(elements.timerMode, isCountdown ? "倒計時" : "正計時");
+        elements.countdownSetting?.classList.toggle("show", isCountdown);
+        isPaused = false;
+        setText(elements.pauseGame, "暫停");
+        startTimer(true);
+      });
+
+      elements.applyCountdown?.addEventListener("click", () => {
+        const minutes = Math.max(1, Math.min(60, Number(elements.countdownMinutes?.value) || 5));
+        if (elements.countdownMinutes) elements.countdownMinutes.value = minutes;
+        countdownTotal = minutes * 60;
+        if (isCountdown) startTimer(true);
+      });
+
+      runSelfTests();
+    });
+  </script>
+</body>
+</html>
